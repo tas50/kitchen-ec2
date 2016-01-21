@@ -22,7 +22,6 @@ require "tempfile"
 require "base64"
 
 describe Kitchen::Driver::Aws::InstanceGenerator do
-
   let(:config) { Hash.new }
   let(:resource) { instance_double(Aws::EC2::Resource) }
   let(:ec2) { instance_double(Kitchen::Driver::Aws::Client, :resource => resource) }
@@ -157,7 +156,6 @@ describe Kitchen::Driver::Aws::InstanceGenerator do
           ]
         )
       end
-
     end
 
     context "when populatd with deprecated configs" do

@@ -22,7 +22,6 @@ require "kitchen/transport/dummy"
 require "kitchen/verifier/dummy"
 
 describe Kitchen::Driver::Ec2 do
-
   let(:logged_output) { StringIO.new }
   let(:logger)        { Logger.new(logged_output) }
   let(:config)        { { :aws_ssh_key_id => "key", :image_id => "ami-1234567" } }
@@ -287,7 +286,6 @@ describe Kitchen::Driver::Ec2 do
       expect(server).to receive(:decrypt_windows_password).with("foo").and_return(password)
       driver.fetch_windows_admin_password(server, state)
     end
-
   end
 
   describe "#wait_with_destroy" do
@@ -375,7 +373,6 @@ describe Kitchen::Driver::Ec2 do
 
       include_examples "common create"
     end
-
   end
 
   describe "#destroy" do
@@ -439,8 +436,8 @@ describe Kitchen::Driver::Ec2 do
       let(:ami_list) { [double("ami", :id => ami_id, :creation_date => date)] }
 
       it "returns the ami id" do
-        expect(resource).to receive(:images).with(aws_filters). \
-          and_return(ami_list)
+        expect(resource).to receive(:images).with(aws_filters) \
+          .and_return(ami_list)
         expect(driver.lookup_ami(filters)).to eq(ami_id)
       end
     end
@@ -458,8 +455,8 @@ describe Kitchen::Driver::Ec2 do
       end
 
       it "returns most recently created ami id" do
-        expect(resource).to receive(:images).with(aws_filters). \
-          and_return(ami_list)
+        expect(resource).to receive(:images).with(aws_filters) \
+          .and_return(ami_list)
         expect(driver.lookup_ami(filters)).to eq(ami_id_newer)
       end
     end
@@ -469,11 +466,11 @@ describe Kitchen::Driver::Ec2 do
     context "when platform is ubuntu" do
       let(:config) { { :aws_ssh_key_id => "key" } }
       let(:platform) { Kitchen::Platform.new(:name => "ubuntu-14.04") }
-      let(:ami_data) { %w[ ami-1305ef78 instance-store amd64 us-east-1 paravirtual ] }
+      let(:ami_data) { %w( ami-1305ef78 instance-store amd64 us-east-1 paravirtual ) }
 
       it "queries an ami_id" do
-        expect(driver).to receive(:ubuntu_ami).with(config[:region], platform.name). \
-          and_return(Ubuntu::Ami.new(*ami_data))
+        expect(driver).to receive(:ubuntu_ami).with(config[:region], platform.name) \
+          .and_return(Ubuntu::Ami.new(*ami_data))
         expect(driver.default_ami).to eq(ami_data[0])
       end
     end
@@ -483,11 +480,10 @@ describe Kitchen::Driver::Ec2 do
       let(:ami_id) { "ami-xxxxxxxx" }
 
       it "searches for an image id" do
-        expect(driver).to receive(:lookup_ami).with(config[:image_search]). \
-          and_return(ami_id)
+        expect(driver).to receive(:lookup_ami).with(config[:image_search]) \
+          .and_return(ami_id)
         expect(driver.default_ami).to eq(ami_id)
       end
     end
   end
-
 end

@@ -19,16 +19,12 @@
 require "base64"
 
 module Kitchen
-
   module Driver
-
     class Aws
-
       # A class for encapsulating the instance payload logic
       #
       # @author Tyler Ball <tball@chef.io>
       class InstanceGenerator
-
         attr_reader :config, :ec2, :logger
 
         def initialize(config, ec2, logger)
@@ -57,7 +53,7 @@ module Kitchen
           if config[:iam_profile_name]
             i[:iam_instance_profile] = { :name => config[:iam_profile_name] }
           end
-          if !config.fetch(:associate_public_ip, nil).nil?
+          unless config.fetch(:associate_public_ip, nil).nil?
             i[:network_interfaces] =
               [{
                 :device_index => 0,
@@ -87,7 +83,7 @@ module Kitchen
           bdms = config[:block_device_mappings] || []
           if bdms.empty?
             if config[:ebs_volume_size] || config.fetch(:ebs_delete_on_termination, nil) ||
-                config[:ebs_device_name] || config[:ebs_volume_type]
+               config[:ebs_device_name] || config[:ebs_volume_type]
               # If the user didn't supply block_device_mappings but did supply
               # the old configs, copy them into the block_device_mappings array correctly
               # TODO: remove this logic when we remove the deprecated values
@@ -134,30 +130,26 @@ module Kitchen
             # when we try to create the instance
             return
           end
-          bdms.find { |bdm|
+          bdms.find do |bdm|
             if bdm[:device_name] == root_device_name
               logger.info("Overriding root device [#{root_device_name}] from image [#{image_id}]")
             end
-          }
+          end
         end
 
         def prepared_user_data
           # If user_data is a file reference, lets read it as such
           return nil if config[:user_data].nil?
           @user_data ||= begin
-            if File.file?(config[:user_data])
-              @user_data = File.read(config[:user_data])
-            else
-              @user_data = config[:user_data]
+            @user_data = if File.file?(config[:user_data])
+                           File.read(config[:user_data])
+                         else
+                           config[:user_data]
             end
             @user_data = Base64.encode64(@user_data)
           end
         end
-
       end
-
     end
-
   end
-
 end

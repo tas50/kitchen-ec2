@@ -27,14 +27,11 @@ require "ubuntu_ami"
 require "retryable"
 
 module Kitchen
-
   module Driver
-
     # Amazon EC2 driver for Test Kitchen.
     #
     # @author Fletcher Nichol <fnichol@nichol.ca>
     class Ec2 < Kitchen::Driver::Base # rubocop:disable Metrics/ClassLength
-
       kitchen_driver_api_version 2
 
       plugin_version Kitchen::Driver::EC2_VERSION
@@ -48,9 +45,7 @@ module Kitchen
       default_config :security_group_ids, nil
       default_config :tags,                "created-by" => "test-kitchen"
       default_config :user_data do |driver|
-        if driver.windows_os?
-          driver.default_windows_user_data
-        end
+        driver.default_windows_user_data if driver.windows_os?
       end
       default_config :private_ip_address, nil
       default_config :iam_profile_name,   nil
@@ -81,15 +76,11 @@ module Kitchen
       deprecated_configs = [:ebs_volume_size, :ebs_delete_on_termination, :ebs_device_name]
       deprecated_configs.each do |d|
         validations[d] = lambda do |attr, val, driver|
-          unless val.nil?
-            validation_warn(driver, attr, "block_device_mappings")
-          end
+          validation_warn(driver, attr, "block_device_mappings") unless val.nil?
         end
       end
       validations[:ssh_key] = lambda do |attr, val, driver|
-        unless val.nil?
-          validation_warn(driver, attr, "transport.ssh_key")
-        end
+        validation_warn(driver, attr, "transport.ssh_key") unless val.nil?
       end
       validations[:ssh_timeout] = lambda do |attr, val, driver|
         unless val.nil?
@@ -102,14 +93,10 @@ module Kitchen
         end
       end
       validations[:username] = lambda do |attr, val, driver|
-        unless val.nil?
-          validation_warn(driver, attr, "transport.username")
-        end
+        validation_warn(driver, attr, "transport.username") unless val.nil?
       end
       validations[:flavor_id] = lambda do |attr, val, driver|
-        unless val.nil?
-          validation_warn(driver, attr, "instance_type")
-        end
+        validation_warn(driver, attr, "instance_type") unless val.nil?
       end
 
       default_config :block_device_mappings, nil
@@ -117,9 +104,9 @@ module Kitchen
         unless val.nil?
           val.each do |bdm|
             unless bdm.keys.include?(:ebs_volume_size) &&
-                bdm.keys.include?(:ebs_delete_on_termination) &&
-                bdm.keys.include?(:ebs_device_name)
-              raise "Every :block_device_mapping must include the keys :ebs_volume_size, " \
+                   bdm.keys.include?(:ebs_delete_on_termination) &&
+                   bdm.keys.include?(:ebs_device_name)
+              fail "Every :block_device_mapping must include the keys :ebs_volume_size, " \
                 ":ebs_delete_on_termination and :ebs_device_name"
             end
           end
@@ -186,12 +173,12 @@ module Kitchen
           are responsible for your incurred costs.
         END
 
-        if config[:price]
-          # Spot instance when a price is set
-          server = submit_spot(state)
-        else
-          # On-demand instance
-          server = submit_server
+        server = if config[:price]
+                   # Spot instance when a price is set
+                   submit_spot(state)
+                 else
+                   # On-demand instance
+                   submit_server
         end
         info("Instance <#{server.id}> requested.")
         server.wait_until_exists do |w|
@@ -218,8 +205,8 @@ module Kitchen
         end
 
         if windows_os? &&
-            instance.transport[:username] =~ /administrator/i &&
-            instance.transport[:password].nil?
+           instance.transport[:username] =~ /administrator/i &&
+           instance.transport[:password].nil?
           # If we're logging into the administrator user and a password isn't
           # supplied, try to fetch it from the AWS instance
           fetch_windows_admin_password(server, state)
@@ -319,9 +306,7 @@ module Kitchen
           ami_username = amis["usernames"][instance.platform.name]
           state[:username] = ami_username if ami_username
         end
-        if config[:ssh_key]
-          state[:ssh_key] = config[:ssh_key]
-        end
+        state[:ssh_key] = config[:ssh_key] if config[:ssh_key]
       end
       # rubocop:enable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
 
@@ -378,8 +363,8 @@ module Kitchen
           state[:hostname] = hostname
           # Euca instances often report ready before they have an IP
           ready = aws_instance.exists? &&
-            aws_instance.state.name == "running" &&
-            hostname != "0.0.0.0"
+                  aws_instance.state.name == "running" &&
+                  hostname != "0.0.0.0"
           if ready && windows_os?
             output = server.console_output.output
             unless output.nil?
@@ -433,7 +418,7 @@ module Kitchen
       def amis
         @amis ||= begin
           json_file = File.join(File.dirname(__FILE__),
-            %w[.. .. .. data amis.json])
+                                %w(.. .. .. data amis.json))
           JSON.load(IO.read(json_file))
         end
       end
@@ -447,7 +432,7 @@ module Kitchen
           "dns" => "public_dns_name",
           "public" => "public_ip_address",
           "private" => "private_ip_address"
-        }
+        }.freeze
 
       #
       # Lookup hostname of provided server.  If interface_type is provided use
@@ -457,7 +442,7 @@ module Kitchen
       def hostname(server, interface_type = nil)
         if interface_type
           interface_type = INTERFACE_TYPES.fetch(interface_type) do
-            raise Kitchen::UserError, "Invalid interface [#{interface_type}]"
+            fail Kitchen::UserError, "Invalid interface [#{interface_type}]"
           end
           server.send(interface_type)
         else
@@ -472,10 +457,10 @@ module Kitchen
       end
 
       def create_ec2_json(state)
-        if windows_os?
-          cmd = "New-Item -Force C:\\chef\\ohai\\hints\\ec2.json -ItemType File"
-        else
-          cmd = "sudo mkdir -p /etc/chef/ohai/hints;sudo touch /etc/chef/ohai/hints/ec2.json"
+        cmd = if windows_os?
+                "New-Item -Force C:\\chef\\ohai\\hints\\ec2.json -ItemType File"
+              else
+                "sudo mkdir -p /etc/chef/ohai/hints;sudo touch /etc/chef/ohai/hints/ec2.json"
         end
         instance.transport.connection(state).execute(cmd)
       end
@@ -522,7 +507,6 @@ module Kitchen
         EOH
       end
       # rubocop:enable Metrics/MethodLength, Metrics/LineLength
-
     end
   end
 end
